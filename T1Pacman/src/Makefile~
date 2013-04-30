@@ -1,0 +1,10 @@
+.PHONY: all
+all: server client
+
+.PHONY: server
+server:
+	javac PacManServer.java
+
+.PHONY: client
+client:
+	javac PacMan.java
