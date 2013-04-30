@@ -9,9 +9,9 @@ public class IfaceImpl1 extends UnicastRemoteObject implements Iface1 {
 	
 	GameSession gs;
 	
-	public IfaceImpl1() throws RemoteException {
+	public IfaceImpl1(int minplayers, boolean verbose) throws RemoteException {
 		super();
-		gs = new GameSession();
+		gs = new GameSession(minplayers, verbose);
 	}
 
 	@Override

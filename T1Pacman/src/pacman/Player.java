@@ -12,15 +12,16 @@ public class Player extends Object implements Serializable {
 	public String id;
 	public int pacmanx, pacmany, pacmandx, pacmandy;
 	public int reqdx, reqdy, viewdx, viewdy;
-	public boolean dying, ingame;
+	public boolean dying, ingame, waiting;
 	public int score, pacsleft;
 
 	public Player(String pacmanid){
 		
 		id = pacmanid;
-		
 		pacsleft = 0;
+		score = 0;
 		ingame = false;
+		waiting = false;
 		
 		reset();
 	}
@@ -38,7 +39,6 @@ public class Player extends Object implements Serializable {
 		viewdx = -1;
 		viewdy = 0;
 		dying = false;
-		score = 0;
 		
 		
 	}

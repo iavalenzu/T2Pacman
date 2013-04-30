@@ -9,9 +9,6 @@ import javax.swing.Timer;
 
 public class GameSession implements ActionListener, Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 2615372360707852353L;
 
 	final short leveldata[] = { 19, 26, 26, 26, 18, 18, 18, 18, 18, 18, 18, 18,
@@ -33,9 +30,6 @@ public class GameSession implements ActionListener, Serializable {
 	final static int nrofblocks = 15;
 	final static int scrsize = nrofblocks * blocksize;
 
-	final int pacmanspeed = 6;
-
-	int maxplayers;
 	short[] screendata;
 	Timer timer;
 
@@ -46,14 +40,17 @@ public class GameSession implements ActionListener, Serializable {
 	public int[] dx, dy;
 	public int[] ghostx, ghosty, ghostdx, ghostdy, ghostspeed;
 	private int currentspeed;
+	final int pacmanspeed = 6;
 
 	public HashMap<String, Player> players = new HashMap<String, Player>();
 
-	private boolean ingame = false;
-
 	private boolean verbose = true;
+	private int minplayers = 0;
 	
-	public GameSession() {
+	public GameSession(int _minplayers, boolean _verbose) {
+
+		verbose = _verbose;
+		minplayers = _minplayers;
 		
 		screendata = new short[nrofblocks * nrofblocks];
 
@@ -67,17 +64,20 @@ public class GameSession implements ActionListener, Serializable {
 		nrofghosts = 6;
 		currentspeed = 3;
 
-		/* Se inicializa el screendata */
-
-		short i;
-		for (i = 0; i < nrofblocks * nrofblocks; i++)
-			screendata[i] = leveldata[i];
-
 		/* Se inicia el timer */
 		timer = new Timer(40, this);
+		
+		/* Se inicializa el screendata */
+		init();
 
 		debug("Jugadores conectados: " + players.size());
 
+	}
+	
+	public void init(){
+		short i;
+		for (i = 0; i < nrofblocks * nrofblocks; i++)
+			screendata[i] = leveldata[i];
 	}
 
 	public String createplayer() {
@@ -94,7 +94,7 @@ public class GameSession implements ActionListener, Serializable {
 
 	public void PlayGame() {
 
-		if(!ingameplayers()) return;
+		if(ingameplayers() <= 0) return;
 		
 		checkdeaths();
 		moveghosts();
@@ -108,18 +108,13 @@ public class GameSession implements ActionListener, Serializable {
 	public void checkdeaths() {
 		for (Player p : players.values()) {
 			if (p.dying && p.ingame) {
-				
 				p.pacsleft--;
-				
 				debug("El jugador " + p.id + " pierde una vida, le quedan " + p.pacsleft + " vidas.");
 				
 				if (p.pacsleft == 0) {
 					p.ingame = false;
-					
-					debug("El jugador " + p.id + " se retira del juego.");
-					
+					debug("El jugador " + p.id + " se retira del juego, quedan " + ingameplayers() + " jugando.");
 				}
-				
 				LevelContinue();
 			}
 		}
@@ -132,20 +127,25 @@ public class GameSession implements ActionListener, Serializable {
 		}
 	}
 
-	/* TODO Solo se inicia un nuevo juego si no hay un juego andando */
 	public void GameInit(Player p) {
 		
 		debug("El jugador " + p.id + " ingresa al juego.");
 
-		// TODO Si hay espacio para un jugador mas seteamos y creamos un cupo
 		p.pacsleft = 3;
 		p.score = 0;
-		p.ingame = true;
-
-		if (!ingame) {
+		p.ingame = false;
+		p.waiting = true;
+		
+		//TODO Revisar lo del waiting players cuando un jugador sale del juego
+		
+		if(waitingplayers() >= minplayers && !timer.isRunning()){
 			timer.start();
 			LevelInit();
-			ingame = true;
+			for (Player q : players.values()) {
+				q.ingame = true;
+				q.waiting = false;
+			}
+			
 		}
 	}
 
@@ -179,27 +179,19 @@ public class GameSession implements ActionListener, Serializable {
 			ghostspeed[i] = validspeeds[random];
 		}
 
-		/* Recorremos todos los jugadores y seteamos los valores */
+		/* Recorremos todos los jugadores y seteamos los valores por defecto */
 
 		for (Player p : players.values()) {
-
-			p.pacmanx = 7 * blocksize; // x position
-			p.pacmany = 11 * blocksize; // y position
-			p.pacmandx = 0;
-			p.pacmandy = 0;
-			p.reqdx = 0;
-			p.reqdy = 0;
-			p.viewdx = -1;
-			p.viewdy = 0;
-			p.dying = false;
-
+			p.reset();
 		}
 
 	}
 
 	public void gameend(Player p) {
 		p.ingame = false;
-		debug("El jugador " + p.id + " se retira del juego.");
+		p.waiting = false;
+
+		debug("El jugador " + p.id + " se retira del juego, quedan " + ingameplayers() + " jugando.");
 	}
 
 	public void setreqplayer(Player p, int dx, int dy) {
@@ -207,15 +199,27 @@ public class GameSession implements ActionListener, Serializable {
 		p.reqdy = dy;
 	}
 
-	public boolean ingameplayers(){
+	public int ingameplayers(){
 		
+		int ingameplayers = 0;
 		for (Player p : players.values()) {
-			if(p.ingame)
-				return true;
+			if(p.ingame) ingameplayers++;
 		}
-		return false;
+		
+		return ingameplayers;
 		
 	}
+	
+	public int waitingplayers(){
+		
+		int waitingplayers = 0;
+		for (Player p : players.values()) {
+			if(p.waiting) waitingplayers++;
+		}
+		
+		return waitingplayers;
+		
+	}	
 	
 	public void moveghosts() {
 
@@ -305,7 +309,6 @@ public class GameSession implements ActionListener, Serializable {
 		if (finished) {
 
 			/* Recorremos los jugadores y actualizamos el puntaje */
-
 			for (Player p : players.values()) {
 				p.score += 50;
 			}

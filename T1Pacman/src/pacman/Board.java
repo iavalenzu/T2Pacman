@@ -129,6 +129,25 @@ public class Board extends JPanel implements ActionListener {
 				GameSession.scrsize / 2);
 	}
 
+	public void ShowWaitingScreen(Graphics2D g2d) {
+
+		g2d.setColor(new Color(0, 32, 48));
+		g2d.fillRect(50, GameSession.scrsize / 2 - 30,
+				GameSession.scrsize - 100, 50);
+		g2d.setColor(Color.white);
+		g2d.drawRect(50, GameSession.scrsize / 2 - 30,
+				GameSession.scrsize - 100, 50);
+
+		String s = "Esperando jugadores.";
+		Font small = new Font("Helvetica", Font.BOLD, 14);
+		FontMetrics metr = this.getFontMetrics(small);
+
+		g2d.setColor(Color.white);
+		g2d.setFont(small);
+		g2d.drawString(s, (GameSession.scrsize - metr.stringWidth(s)) / 2,
+				GameSession.scrsize / 2);
+	}	
+	
 	public void DrawScore(Graphics2D g) {
 		int i;
 		String s;
@@ -343,9 +362,13 @@ public class Board extends JPanel implements ActionListener {
 			DrawScore(g2d);
 			DoAnim();
 
+			//TODO Si el pacman esta esperando otros jugadores para comenzar se muestra una pantalla que indique cuantos faltan
+			
 			if (currentplayer.ingame){
 				DrawPacMans(g2d);
 				DrawGhosts(g2d);
+			}else if(currentplayer.waiting){
+				ShowWaitingScreen(g2d);
 			}else
 				ShowIntroScreen(g2d);
 
