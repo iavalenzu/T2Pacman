@@ -55,10 +55,10 @@ public class Board extends JPanel implements ActionListener {
 	private Player currentplayer;
 	private String playerid;
 
-	public Board() {
+	public Board(String serverip, boolean verbose) {
 
 		try {
-			skeleton = (Iface1) Naming.lookup("rmi://localhost:1099/Iface1");
+			skeleton = (Iface1) Naming.lookup("rmi://" + serverip + ":1099/Iface1");
 			playerid = skeleton.createplayer();
 
 		} catch (NotBoundException e) {

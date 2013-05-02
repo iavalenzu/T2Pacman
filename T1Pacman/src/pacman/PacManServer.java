@@ -2,8 +2,15 @@ package pacman;
 
 import java.rmi.RemoteException;
 import java.rmi.Naming;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Vector;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 
 
 public class PacManServer{
@@ -14,20 +21,49 @@ public class PacManServer{
 	static boolean verbose = false;
 	static int minplayers = Integer.MIN_VALUE;
 	static Vector<String> serversips = new Vector<String>();
+	static String serverip = "127.0.0.1";
 	
 	
 	public static void main(String[] args){
 		
 		/* Parseamos los argumentos */
+
 		
 		parseargs(args);
+		
+/*		
+		try {
+			System.out.println(Inet4Address.getLocalHost().getHostAddress());
+		} catch (UnknownHostException e2) {
+			e2.printStackTrace();
+		}
+		
 
+		Enumeration<NetworkInterface> nets;
+		try {
+			nets = NetworkInterface.getNetworkInterfaces();
+	        for (NetworkInterface netint : Collections.list(nets)){
+	    		Enumeration<InetAddress> inetAddresses = netint.getInetAddresses();
+	            for (InetAddress inetAddress : Collections.list(inetAddresses)) {
+	                System.out.printf("InetAddress: %s\n", inetAddress);
+	            }
+	        	
+	        }
+		} catch (SocketException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+*/		
+		
+		
 		
 		System.out.println(minplayers);
 		System.out.println(verbose);
 		System.out.println(serversips);
-		
-		System.exit(0);
+		System.out.println(serverip);
+
+		//		System.exit(0);
 			
 		// Establecimiento del stub en el rmiserver
 		try{
@@ -36,7 +72,7 @@ public class PacManServer{
 			migrator = new Migrator(stub);
 
 			// Hacer bind de la instancia en el servidor rmi
-			Naming.rebind("rmi://localhost:1099/Iface1", stub);
+			Naming.rebind("rmi://" + serverip + ":1099/Iface1", stub);
 		} catch (RemoteException e){
 			System.out.println("Hubo una excepción creando la instancia del objeto distribuido");
 		} catch (MalformedURLException e){
@@ -57,6 +93,7 @@ public class PacManServer{
 	
 		Vector<String> v_minplayers = new Vector<String>();
 		Vector<String> v_serversips = new Vector<String>();
+		Vector<String> v_serverip = new Vector<String>();
 		Vector<String> v_verbose = new Vector<String>();
 		
 		Vector<String> aux = null;
@@ -80,6 +117,10 @@ public class PacManServer{
 					
 				case "-ips":
 					aux = v_serversips;
+					break;
+					
+				case "-server":
+					aux = v_serverip;
 					break;
 					
 				default:
@@ -106,6 +147,12 @@ public class PacManServer{
 				usage();
 			}
 		
+			if(!v_serverip.isEmpty()){
+				serverip = v_serverip.firstElement();
+			}else{
+				usage();
+			}
+
 		}catch(Exception e){
 			usage();
 		}
