@@ -70,7 +70,7 @@ public class GameSession implements ActionListener, Serializable {
 		/* Se inicializa el screendata */
 		init();
 
-		debug("Jugadores conectados: " + players.size());
+		debug("Jugadores conectados: " + players.size() + "\n");
 
 	}
 	
@@ -86,7 +86,7 @@ public class GameSession implements ActionListener, Serializable {
 		Player p = new Player(id);
 		players.put(id, p);
 
-		debug("Se crea el jugador con id: " + p.id);
+		debug("Se crea el jugador con id: " + p.id + "\n");
 
 		return id;
 
@@ -94,7 +94,7 @@ public class GameSession implements ActionListener, Serializable {
 
 	public void PlayGame() {
 
-		if(ingameplayers() <= 0) return;
+		debug(".");
 		
 		checkdeaths();
 		moveghosts();
@@ -103,17 +103,15 @@ public class GameSession implements ActionListener, Serializable {
 
 	}
 
-	//TODO Revisar que solo se ejecuten acciones sobre jugadores que esten jugando
-	
 	public void checkdeaths() {
 		for (Player p : players.values()) {
 			if (p.dying && p.ingame) {
 				p.pacsleft--;
-				debug("El jugador " + p.id + " pierde una vida, le quedan " + p.pacsleft + " vidas.");
+				debug("El jugador " + p.id + " pierde una vida, le quedan " + p.pacsleft + " vidas.\n");
 				
 				if (p.pacsleft == 0) {
 					p.ingame = false;
-					debug("El jugador " + p.id + " se retira del juego, quedan " + ingameplayers() + " jugando.");
+					debug("El jugador " + p.id + " se retira del juego, quedan " + ingameplayers() + " jugando.\n");
 				}
 				LevelContinue();
 			}
@@ -129,21 +127,30 @@ public class GameSession implements ActionListener, Serializable {
 
 	public void GameInit(Player p) {
 		
-		debug("El jugador " + p.id + " ingresa al juego.");
+		debug("El jugador " + p.id + " ingresa al juego.\n");
 
 		p.pacsleft = 3;
 		p.score = 0;
-		p.ingame = false;
-		p.waiting = true;
 		
-		//TODO Revisar lo del waiting players cuando un jugador sale del juego
+		if(timer.isRunning()){
+			p.ingame = true;
+			p.waiting = false;
+		}else{
+			p.ingame = false;
+			p.waiting = true;
+		}		
 		
-		if(waitingplayers() >= minplayers && !timer.isRunning()){
-			timer.start();
-			LevelInit();
+		if(waitingplayers() >= minplayers){
+			
+			if(!timer.isRunning()){
+				timer.start();
+				LevelInit();
+			}
 			for (Player q : players.values()) {
-				q.ingame = true;
-				q.waiting = false;
+				if(q.waiting){
+					q.ingame = true;
+					q.waiting = false;
+				}
 			}
 			
 		}
@@ -151,7 +158,7 @@ public class GameSession implements ActionListener, Serializable {
 
 	public void debug(String msg){
 		if(verbose)
-			System.out.println(msg);
+			System.out.print(msg);
 	}
 	
 	public void LevelInit() {
@@ -190,8 +197,12 @@ public class GameSession implements ActionListener, Serializable {
 	public void gameend(Player p) {
 		p.ingame = false;
 		p.waiting = false;
+		
+		if(ingameplayers() == 0 && timer.isRunning()){
+			timer.stop();
+		}
 
-		debug("El jugador " + p.id + " se retira del juego, quedan " + ingameplayers() + " jugando.");
+		debug("El jugador " + p.id + " se retira del juego, quedan " + ingameplayers() + " jugando.\n");
 	}
 
 	public void setreqplayer(Player p, int dx, int dy) {
@@ -286,7 +297,7 @@ public class GameSession implements ActionListener, Serializable {
 							&& p.pacmany < (ghosty[i] + 12)) {
 						p.dying = true;
 
-						debug("El jugador " + p.id + " muere.");
+						debug("El jugador " + p.id + " muere.\n");
 
 					}
 				}
