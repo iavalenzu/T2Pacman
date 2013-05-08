@@ -11,7 +11,7 @@ public class GameSession implements ActionListener, Serializable {
 
 	private static final long serialVersionUID = 2615372360707852353L;
 
-	final short leveldata[] = { 19, 26, 26, 26, 18, 18, 18, 18, 18, 18, 18, 18,
+	private final short leveldata[] = { 19, 26, 26, 26, 18, 18, 18, 18, 18, 18, 18, 18,
 			18, 18, 22, 21, 0, 0, 0, 17, 16, 16, 16, 16, 16, 16, 16, 16, 16,
 			20, 21, 0, 0, 0, 17, 16, 16, 16, 16, 16, 16, 16, 16, 16, 20, 21, 0,
 			0, 0, 17, 16, 16, 24, 16, 16, 16, 16, 16, 16, 20, 17, 18, 18, 18,
@@ -30,22 +30,22 @@ public class GameSession implements ActionListener, Serializable {
 	final static int nrofblocks = 15;
 	final static int scrsize = nrofblocks * blocksize;
 
-	short[] screendata;
-	Timer timer;
+	private short[] screendata;
+	private Timer timer;
 
-	public int nrofghosts = 6;
-	final int maxghosts = 12;
-	final int validspeeds[] = { 1, 2, 3, 4, 6, 8 };
-	final int maxspeed = 6;
-	public int[] dx, dy;
-	public int[] ghostx, ghosty, ghostdx, ghostdy, ghostspeed;
+	private int nrofghosts = 6;
+	private final int maxghosts = 12;
+	private final int validspeeds[] = { 1, 2, 3, 4, 6, 8 };
+	private final int maxspeed = 6;
+	private int[] dx, dy;
+	private int[] ghostx, ghosty, ghostdx, ghostdy, ghostspeed;
 	private int currentspeed;
-	final int pacmanspeed = 6;
+	private final int pacmanspeed = 6;
 
-	public HashMap<String, Player> players = new HashMap<String, Player>();
+	private HashMap<String, Player> players = new HashMap<String, Player>();
 
-	private boolean verbose = true;
-	private int minplayers = 0;
+	private boolean verbose;
+	private int minplayers;
 	
 	public GameSession(int _minplayers, boolean _verbose) {
 
@@ -70,10 +70,34 @@ public class GameSession implements ActionListener, Serializable {
 		/* Se inicializa el screendata */
 		init();
 
-		debug("Jugadores conectados: " + players.size() + "\n");
+		debug("Jugadores conectados: " + players.size());
 
 	}
 	
+	public Player getPlayer(String playerid){
+		return players.get(playerid);
+	}
+
+	public HashMap<String, Player> getPlayers(){
+		return players;
+	}
+	
+	public short getScreendata(short pos){
+		return screendata[pos];
+	}
+	
+	public int getNrofghosts(){
+		return nrofghosts;
+	}
+	
+	public int getGhostX(short pos){
+		return ghostx[pos];
+	}
+	
+	public int getGhostY(short pos){
+		return ghosty[pos];
+	}
+
 	public void init(){
 		short i;
 		for (i = 0; i < nrofblocks * nrofblocks; i++)
@@ -94,7 +118,7 @@ public class GameSession implements ActionListener, Serializable {
 
 	public void PlayGame() {
 
-		debug(".");
+		System.out.print(".");
 		
 		checkdeaths();
 		moveghosts();
@@ -125,6 +149,14 @@ public class GameSession implements ActionListener, Serializable {
 		}
 	}
 
+	public void stop(){
+		
+		if(timer != null && timer.isRunning()){
+			timer.stop();
+		}
+		
+	}
+	
 	public void GameInit(Player p) {
 		
 		debug("El jugador " + p.id + " ingresa al juego.\n");
@@ -158,7 +190,7 @@ public class GameSession implements ActionListener, Serializable {
 
 	public void debug(String msg){
 		if(verbose)
-			System.out.print(msg);
+			System.out.print("\n" + msg);
 	}
 	
 	public void LevelInit() {

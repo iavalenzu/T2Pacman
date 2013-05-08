@@ -58,6 +58,9 @@ public class Board extends JPanel implements ActionListener {
 	public Board(String serverip, boolean verbose) {
 
 		try {
+			
+			System.out.println("ServerIp: " + serverip);
+			
 			skeleton = (Iface1) Naming.lookup("rmi://" + serverip + ":1099/Iface1");
 			playerid = skeleton.createplayer();
 
@@ -68,6 +71,7 @@ public class Board extends JPanel implements ActionListener {
 			System.out.println("URL invalida");
 			System.exit(128);
 		} catch (RemoteException e) {
+			e.printStackTrace();
 			System.out
 					.println("Excepcion remota tratando de conectarse al servidor");
 			System.exit(128);
@@ -163,9 +167,9 @@ public class Board extends JPanel implements ActionListener {
 
 	public void DrawGhosts(Graphics2D g2d) throws RemoteException {
 		short i;
-		for (i = 0; i < currentgamesession.nrofghosts; i++) {
-			drawGhost(g2d, currentgamesession.ghostx[i] + 1,
-					currentgamesession.ghosty[i] + 1);
+		for (i = 0; i < currentgamesession.getNrofghosts(); i++) {
+			drawGhost(g2d, currentgamesession.getGhostX(i) + 1,
+					currentgamesession.getGhostY(i) + 1);
 		}
 	}
 
@@ -174,7 +178,7 @@ public class Board extends JPanel implements ActionListener {
 	}
 
 	public void DrawPacMans(Graphics2D g2d) throws RemoteException {
-		for (Player p : currentgamesession.players.values()) {
+		for (Player p : currentgamesession.getPlayers().values()) {
 			if(p.ingame){
 				DrawPacMan(g2d, p);
 			}
@@ -273,27 +277,27 @@ public class Board extends JPanel implements ActionListener {
 				g2d.setColor(mazecolor);
 				g2d.setStroke(new BasicStroke(2));
 
-				if ((currentgamesession.screendata[i] & 1) != 0) // draws left
+				if ((currentgamesession.getScreendata(i) & 1) != 0) // draws left
 				{
 					g2d.drawLine(x, y, x, y + GameSession.blocksize - 1);
 				}
-				if ((currentgamesession.screendata[i] & 2) != 0) // draws top
+				if ((currentgamesession.getScreendata(i) & 2) != 0) // draws top
 				{
 					g2d.drawLine(x, y, x + GameSession.blocksize - 1, y);
 				}
-				if ((currentgamesession.screendata[i] & 4) != 0) // draws right
+				if ((currentgamesession.getScreendata(i) & 4) != 0) // draws right
 				{
 					g2d.drawLine(x + GameSession.blocksize - 1, y, x
 							+ GameSession.blocksize - 1, y
 							+ GameSession.blocksize - 1);
 				}
-				if ((currentgamesession.screendata[i] & 8) != 0) // draws bottom
+				if ((currentgamesession.getScreendata(i) & 8) != 0) // draws bottom
 				{
 					g2d.drawLine(x, y + GameSession.blocksize - 1, x
 							+ GameSession.blocksize - 1, y
 							+ GameSession.blocksize - 1);
 				}
-				if ((currentgamesession.screendata[i] & 16) != 0) // draws point
+				if ((currentgamesession.getScreendata(i) & 16) != 0) // draws point
 				{
 					g2d.setColor(dotcolor);
 					g2d.fillRect(x + 11, y + 11, 2, 2);
@@ -356,7 +360,7 @@ public class Board extends JPanel implements ActionListener {
 
 			/* Se obtiene la sesion del juego */
 			currentgamesession = skeleton.getgamesession();
-			currentplayer = currentgamesession.players.get(playerid);
+			currentplayer = currentgamesession.getPlayer(playerid);
 
 			DrawMaze(g2d);
 			DrawScore(g2d);

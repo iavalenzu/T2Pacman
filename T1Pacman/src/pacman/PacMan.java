@@ -107,6 +107,9 @@ public class PacMan extends JFrame {
 	public static void main(String[] args) {
 		
 		parseargs(args);
+		
+		System.out.println("ServerIp: " + serverip);
+		
 		new PacMan(serverip, verbose);
 	}
 }
