@@ -70,7 +70,7 @@ public class GameSession implements ActionListener, Serializable {
 		/* Se inicializa el screendata */
 		init();
 
-		debug("Jugadores conectados: " + players.size());
+		Logger.debug("Jugadores conectados: " + players.size(), "GameSession", verbose);
 
 	}
 	
@@ -110,7 +110,7 @@ public class GameSession implements ActionListener, Serializable {
 		Player p = new Player(id);
 		players.put(id, p);
 
-		debug("Se crea el jugador con id: " + p.id + "\n");
+		Logger.debug("Se crea el jugador con id: " + p.id + "", "GameSession", verbose);
 
 		return id;
 
@@ -118,7 +118,9 @@ public class GameSession implements ActionListener, Serializable {
 
 	public void PlayGame() {
 
-		System.out.print(".");
+		Logger.print(".", verbose);
+
+		checkingameplayers();
 		
 		checkdeaths();
 		moveghosts();
@@ -127,15 +129,21 @@ public class GameSession implements ActionListener, Serializable {
 
 	}
 
+	public void checkingameplayers(){
+		if(ingameplayers() == 0 && timer.isRunning()){
+			timer.stop();
+		}
+	}
+	
 	public void checkdeaths() {
 		for (Player p : players.values()) {
 			if (p.dying && p.ingame) {
 				p.pacsleft--;
-				debug("El jugador " + p.id + " pierde una vida, le quedan " + p.pacsleft + " vidas.\n");
+				Logger.debug("El jugador " + p.id + " pierde una vida, le quedan " + p.pacsleft + " vidas.", "GameSession", verbose);
 				
 				if (p.pacsleft == 0) {
 					p.ingame = false;
-					debug("El jugador " + p.id + " se retira del juego, quedan " + ingameplayers() + " jugando.\n");
+					Logger.debug("El jugador " + p.id + " se retira del juego, quedan " + ingameplayers() + " jugando.", "GameSession", verbose);
 				}
 				LevelContinue();
 			}
@@ -150,16 +158,25 @@ public class GameSession implements ActionListener, Serializable {
 	}
 
 	public void stop(){
-		
 		if(timer != null && timer.isRunning()){
 			timer.stop();
 		}
-		
 	}
+	
+	public void restart(){
+		if(timer != null && !timer.isRunning()){
+			timer.restart();
+		}
+	}
+
+	public boolean isRunning(){
+		return timer.isRunning();
+	}
+	
 	
 	public void GameInit(Player p) {
 		
-		debug("El jugador " + p.id + " ingresa al juego.\n");
+		Logger.debug("El jugador " + p.id + " ingresa al juego.", "GameSession", verbose);
 
 		p.pacsleft = 3;
 		p.score = 0;
@@ -188,11 +205,6 @@ public class GameSession implements ActionListener, Serializable {
 		}
 	}
 
-	public void debug(String msg){
-		if(verbose)
-			System.out.print("\n" + msg);
-	}
-	
 	public void LevelInit() {
 		int i;
 		for (i = 0; i < nrofblocks * nrofblocks; i++)
@@ -230,11 +242,7 @@ public class GameSession implements ActionListener, Serializable {
 		p.ingame = false;
 		p.waiting = false;
 		
-		if(ingameplayers() == 0 && timer.isRunning()){
-			timer.stop();
-		}
-
-		debug("El jugador " + p.id + " se retira del juego, quedan " + ingameplayers() + " jugando.\n");
+		Logger.debug("El jugador " + p.id + " se retira del juego, quedan " + ingameplayers() + " jugando.", "GameSession", verbose);
 	}
 
 	public void setreqplayer(Player p, int dx, int dy) {
@@ -329,7 +337,7 @@ public class GameSession implements ActionListener, Serializable {
 							&& p.pacmany < (ghosty[i] + 12)) {
 						p.dying = true;
 
-						debug("El jugador " + p.id + " muere.\n");
+						Logger.debug("El jugador " + p.id + " muere.", "GameSession", verbose);
 
 					}
 				}

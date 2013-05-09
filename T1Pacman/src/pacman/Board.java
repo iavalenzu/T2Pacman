@@ -55,25 +55,41 @@ public class Board extends JPanel implements ActionListener {
 	private Player currentplayer;
 	private String playerid;
 
-	public Board(String serverip, boolean verbose) {
+	private boolean verbose;
+	
+	public Board(String serverip, boolean _verbose) {
 
+		verbose = _verbose;
+		
+		
 		try {
 			
-			System.out.println("ServerIp: " + serverip);
+			Logger.debug("Server hostname: " + serverip, "Server", verbose);
 			
 			skeleton = (Iface1) Naming.lookup("rmi://" + serverip + ":1099/Iface1");
-			playerid = skeleton.createplayer();
+
+			/* Dado que el juego puede migrar de un servidor a otro, es necesario saber que servidor esta corriendo actualmente el juego,
+			 * es por esta razon que se debe preguntar al servidor al cual me conecté, si esta corriendo el juego o si uno de sus compañeros
+			 * lo esta haciendo, para luego conectarme a él 
+			 */
+			
+			String activeserver = skeleton.getActiveGameServer();
+			if(activeserver != null){
+				skeleton = (Iface1) Naming.lookup("rmi://" + activeserver + ":1099/Iface1");
+				Logger.debug("EL juego esta actualmente en el servidor '" + activeserver + "'", "Server", verbose);
+			}
+			
+			playerid = skeleton.createPlayer();
 
 		} catch (NotBoundException e) {
-			System.out.println("El servicio no esta publicado en el servidor");
+			Logger.error("El servicio no esta publicado en el servidor.");
 			System.exit(128);
 		} catch (MalformedURLException e) {
-			System.out.println("URL invalida");
+			Logger.error("URL invalida.");
 			System.exit(128);
 		} catch (RemoteException e) {
 			e.printStackTrace();
-			System.out
-					.println("Excepcion remota tratando de conectarse al servidor");
+			Logger.error("Excepcion remota tratando de conectarse al servidor.");
 			System.exit(128);
 		}
 
@@ -308,11 +324,11 @@ public class Board extends JPanel implements ActionListener {
 	}
 
 	public void GameInit() throws RemoteException {
-		skeleton.gameinit(playerid);
+		skeleton.gameInit(playerid);
 	}
 
 	public void GameEnd() throws RemoteException{
-		skeleton.gameend(playerid);
+		skeleton.gameEnd(playerid);
 	}
 	
 	public void GetImages() {
@@ -358,16 +374,27 @@ public class Board extends JPanel implements ActionListener {
 
 		try {
 
+			/* Preguntamos al servidor si se definió un hostname al cual migrar, si es asi
+			 * nos conectamos a el y modificamos la referencia de skeleton, para que la consultas se 
+			 * ejecuten al nuevo servidor
+			 */
+
+			String hostname = skeleton.getMigrationHostname();
+			
+			if(hostname != null){
+				skeleton = (Iface1) Naming.lookup("rmi://" + hostname + ":1099/Iface1");
+				Logger.debug("EL juego migró al servidor '" + hostname + "'", "Server", verbose);
+			}
+
+			
 			/* Se obtiene la sesion del juego */
-			currentgamesession = skeleton.getgamesession();
+			currentgamesession = skeleton.getGameSession();
 			currentplayer = currentgamesession.getPlayer(playerid);
 
 			DrawMaze(g2d);
 			DrawScore(g2d);
 			DoAnim();
 
-			//TODO Si el pacman esta esperando otros jugadores para comenzar se muestra una pantalla que indique cuantos faltan
-			
 			if (currentplayer.ingame){
 				DrawPacMans(g2d);
 				DrawGhosts(g2d);
@@ -376,7 +403,7 @@ public class Board extends JPanel implements ActionListener {
 			}else
 				ShowIntroScreen(g2d);
 
-		} catch (RemoteException e2) {
+		} catch (Exception e2) {
 			e2.printStackTrace();
 		}
 
@@ -396,22 +423,22 @@ public class Board extends JPanel implements ActionListener {
 					if (key == KeyEvent.VK_LEFT) {
 						reqdx = -1;
 						reqdy = 0;
-						skeleton.setreqplayer(playerid, reqdx, reqdy);
+						skeleton.setReqPlayer(playerid, reqdx, reqdy);
 
 					} else if (key == KeyEvent.VK_RIGHT) {
 						reqdx = 1;
 						reqdy = 0;
-						skeleton.setreqplayer(playerid, reqdx, reqdy);
+						skeleton.setReqPlayer(playerid, reqdx, reqdy);
 
 					} else if (key == KeyEvent.VK_UP) {
 						reqdx = 0;
 						reqdy = -1;
-						skeleton.setreqplayer(playerid, reqdx, reqdy);
+						skeleton.setReqPlayer(playerid, reqdx, reqdy);
 
 					} else if (key == KeyEvent.VK_DOWN) {
 						reqdx = 0;
 						reqdy = 1;
-						skeleton.setreqplayer(playerid, reqdx, reqdy);
+						skeleton.setReqPlayer(playerid, reqdx, reqdy);
 
 					} else if (key == KeyEvent.VK_ESCAPE && timer.isRunning()) {
 						GameEnd();
@@ -442,7 +469,7 @@ public class Board extends JPanel implements ActionListener {
 						|| key == Event.DOWN) {
 					reqdx = 0;
 					reqdy = 0;
-					skeleton.setreqplayer(playerid, reqdx, reqdy);
+					skeleton.setReqPlayer(playerid, reqdx, reqdy);
 				}
 
 			} catch (RemoteException e1) {

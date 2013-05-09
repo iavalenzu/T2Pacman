@@ -22,22 +22,19 @@ public class PacManServer{
 			
 		// Establecimiento del stub en el rmiserver
 		try{
+			Logger.debug("El servidor esta corriendo en " + hostname + ".", "Server",  verbose);
+
 			// Crear el stub (objeto distribuido)
 			stub = new IfaceImpl1(minplayers, hostname, otherserver, verbose);
 
 			// Hacer bind de la instancia en el servidor rmi
 			Naming.rebind("rmi://" + hostname + ":1099/Iface1", stub);
 			
-			if(verbose){
-				System.out.print("\nEl servidor esta corriendo en " + hostname + " ...");
-			}
-			
 		} catch (RemoteException e){
 			e.printStackTrace();
-			
-			System.out.print("\nHubo una excepción creando la instancia del objeto distribuido");
+			Logger.error("Hubo una excepción creando la instancia del objeto distribuido.");
 		} catch (MalformedURLException e){
-			System.out.println("\nURL mal formada al tratar de publicar el objeto");
+			Logger.error("URL mal formada al tratar de publicar el objeto.");
 		}
 	}
 	

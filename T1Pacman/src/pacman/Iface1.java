@@ -18,18 +18,21 @@ public interface Iface1 extends Remote{
 	
 	public double getOverLoad() throws RemoteException;
 	
+	public String  getMigrationHostname() throws RemoteException;
 	
-	public GameSession getgamesession() throws RemoteException;
+	public String getActiveGameServer() throws RemoteException; 
+	
+	public GameSession getGameSession() throws RemoteException;
 
-	public void setgamesession(GameSession gs) throws RemoteException;
+	public void setGameSession(GameSession gs) throws RemoteException;
 	
-	public String createplayer() throws RemoteException;
+	public String createPlayer() throws RemoteException;
 
-	public void setreqplayer(String playerid, int dx, int dy) throws RemoteException; 
+	public void setReqPlayer(String playerid, int dx, int dy) throws RemoteException; 
 	
-	public void gameinit(String playerid) throws RemoteException;
+	public void gameInit(String playerid) throws RemoteException;
 	
-	public void gameend(String playerid) throws RemoteException;
+	public void gameEnd(String playerid) throws RemoteException;
 
 	
 }
