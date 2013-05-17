@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.Remote;
 import java.util.Vector;
 
-public interface Iface1 extends Remote{
+public interface Iface extends Remote{
 	
 	/*
 	* Esta es la interfaz (skeleton) del objeto distribuido
@@ -16,7 +16,7 @@ public interface Iface1 extends Remote{
 
 	public boolean addServerIp(String server) throws RemoteException;
 	
-	public double getOverLoad() throws RemoteException;
+	public double getSystemLoad() throws RemoteException;
 	
 	public String  getMigrationHostname() throws RemoteException;
 	
@@ -33,6 +33,5 @@ public interface Iface1 extends Remote{
 	public void gameInit(String playerid) throws RemoteException;
 	
 	public void gameEnd(String playerid) throws RemoteException;
-
 	
 }

@@ -2,6 +2,8 @@ package pacman;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.rmi.Naming;
 import java.util.Iterator;
 import java.util.Vector;
@@ -10,11 +12,15 @@ import javax.swing.Timer;
 
 public class Server implements ActionListener {
 
+	private final int TIMER_DELAY = 60000;
+	
+	private final Object lock = new Object();
+	
 	private Timer migrator;
 	
 	private Vector<String> servers = new Vector<String>();
 	private String hostname, otherserver;
-	private String migrationhostname;
+	private String migrationhost;
 	
 	private int minplayers;
 	private boolean verbose;
@@ -29,7 +35,7 @@ public class Server implements ActionListener {
 		minplayers = _minplayers;
 		verbose = _verbose;
 		
-		migrationhostname = null;
+		migrationhost = null;
 		
 		
 		if(otherserver == null)
@@ -37,14 +43,14 @@ public class Server implements ActionListener {
 		else
 			gamesession = null;
 		
-		migrator = new Timer(20000, this);
+		migrator = new Timer(TIMER_DELAY, this);
 		migrator.start();
 		registerHostname();
 		
 	}
 	
 	public String getMigrationHostname(){
-		return migrationhostname;
+		return migrationhost;
 	}
 	
 	
@@ -54,12 +60,12 @@ public class Server implements ActionListener {
 	
 	public void setGameSession(GameSession gs){
 		
-		Logger.debug("Recibo el juego y lo continúo.", "Server",  verbose);
+		Logger.debug("Recibo el juego!!", "Server",  verbose);
 		
 		gamesession = gs;
 		gamesession.restart();
 		migrator.restart();
-		migrationhostname = null;
+		migrationhost = null;
 		
 		
 	}
@@ -68,25 +74,40 @@ public class Server implements ActionListener {
 		return gamesession.getPlayer(playerid); 
 	}
 	
+	public double getSystemLoad(){
+		
+		OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+		if(operatingSystemMXBean == null) return Double.MAX_VALUE;
+		return operatingSystemMXBean.getSystemLoadAverage(); 		
+				
+	}
+	
 	public void migrate(){
 		
 		if(gamesession == null) return;
 		
-		/*Solo migra si el juego esta andando*/
-		if(!gamesession.isRunning()) return;
+		//if(!gamesession.isRunning()) return;
 		
 		if(servers.isEmpty()) return;
 		
 		String chosenserver = getMinOverLoadServer();
 		
+		if(chosenserver.equals(hostname)) return;
+		
 		try {
-	    	Iface1 skeleton = (Iface1) Naming.lookup("rmi://" + chosenserver + ":1099/Iface1");
-	    	migrator.stop();
-	    	gamesession.stop();
-	    	skeleton.setGameSession(gamesession);
-	    	migrationhostname = chosenserver;
+			
+			synchronized(lock) {
+			
+		    	Iface skeleton = (Iface) Naming.lookup("rmi://" + chosenserver + ":1099/Iface1");
+		    	migrator.stop();
+		    	gamesession.stop();
+		    	skeleton.setGameSession(gamesession);
+		    	gamesession = null;
+		    	migrationhost = chosenserver;
+		    	
+		    	Logger.debug("Migro el juego al servidor '" + chosenserver + "'.", "Server", verbose);
 	    	
-	    	Logger.debug("Migro el juego al servidor '" + chosenserver + "'.", "Server", verbose);
+			}
 	    	
 		} catch (Exception e) {
 			Logger.error("No pude migrar el juego al servidor '" + chosenserver + "'");
@@ -102,18 +123,23 @@ public class Server implements ActionListener {
 		
 		Iterator<String> itr = servers.iterator();
 		
-		double min = Double.MAX_VALUE;
-		String chosenserver = null;
-		
-		/*Recorremos la lista de servidores obtenida e informacion la existencia de hostname*/
+		double min = getSystemLoad();
+		String chosenserver = hostname;
+
+    	Logger.debug("Este servidor tiene carga: " + min, "Server", verbose);
+
+    	/*Recorremos la lista de servidores obtenida e informacion la existencia de hostname*/
 	    while(itr.hasNext()){
 	    	
 	    	String serverip = itr.next();
 	    	try {
-		    	Iface1 skeleton = (Iface1) Naming.lookup("rmi://" + serverip + ":1099/Iface1");
-		    	double overload = skeleton.getOverLoad(); 
-		    	if(overload < min){
-		    		min = overload;
+		    	Iface skeleton = (Iface) Naming.lookup("rmi://" + serverip + ":1099/Iface1");
+		    	double systemload = skeleton.getSystemLoad(); 
+		    	
+		    	Logger.debug("El servidor '"+ serverip +"' tiene carga: " + systemload, "Server", verbose);
+		    	
+		    	if(systemload < min){
+		    		min = systemload;
 		    		chosenserver = serverip;
 		    	}
 			} catch (Exception e) {
@@ -132,7 +158,7 @@ public class Server implements ActionListener {
 		if(otherserver != null && !otherserver.equals(hostname)){
 		
 			try {
-				Iface1 skeleton = (Iface1) Naming.lookup("rmi://" + otherserver + ":1099/Iface1");
+				Iface skeleton = (Iface) Naming.lookup("rmi://" + otherserver + ":1099/Iface1");
 
 				/*Se obtiene la lista de los servidores conectados con 'otherserver'*/
 				otherservers = skeleton.getServers();
@@ -150,6 +176,7 @@ public class Server implements ActionListener {
 			} catch (Exception e) {
 				Logger.error("No puedo obtener la lista de servidores de '" + otherserver + "'");
 				Logger.error(e.getMessage());
+				System.exit(0);
 			}	
 		
 		}
@@ -167,7 +194,7 @@ public class Server implements ActionListener {
 		    	
 					try {
 						
-				    	Iface1 skeleton = (Iface1) Naming.lookup("rmi://" + serverip + ":1099/Iface1");
+				    	Iface skeleton = (Iface) Naming.lookup("rmi://" + serverip + ":1099/Iface1");
 	
 				    	if(skeleton.addServerIp(hostname))
 				    		Logger.debug("Informando la existencia del nuevo servidor '" + hostname + "' al servidor '" + serverip + "'", "Server", verbose);
@@ -192,43 +219,59 @@ public class Server implements ActionListener {
 	
 	public String getActiveGameServer(){
 		
-		if(gamesession != null){
-			return hostname;
+		synchronized(lock) {
+		
+			if(gamesession != null){
+				return hostname;
+			}
+			
+			if(servers != null && !servers.isEmpty()){
+				
+				Iterator<String> itr = servers.iterator();
+				
+				/*Recorremos la lista de servidores obtenida buscando quien esta manejando el juego en este momento*/
+			    while(itr.hasNext()){
+			    	
+			    	String serverip = itr.next();
+	
+			    	if(!serverip.equals(hostname)){
+			    	
+						try {
+							
+					    	Iface skeleton = (Iface) Naming.lookup("rmi://" + serverip + ":1099/Iface1");
+					    	
+					    	if(skeleton.getGameSession() != null){
+					    		Logger.debug("El juego esta corriendo actualmente en el servidor '" + hostname + "'", "Server", verbose);
+					    		return serverip;
+					    	}
+					    	
+						} catch (Exception e) {
+							Logger.error("No puedo saber si el servidor '" + serverip + "' esta corriendo el juego.");
+							Logger.error(e.getMessage());
+						}
+						
+			    	}
+			    }
+			    
+				/*En este punto no se encontraron servidores que tengan un juego activo, luego creamos un juego en el servidor de menor carga*/
+				if(gamesession == null){
+					
+		    		Logger.debug("No hay servidores corriendo el juego!! El servidor '" + hostname + "' continua el juego.", "Server", verbose);
+					gamesession = new GameSession(minplayers, verbose);
+					gamesession.restart();
+					migrator.restart();
+					migrationhost = null;
+					
+					return hostname;
+				}
+	
+			}		
+			
+		    return null;
+	    
 		}
 		
-		if(servers != null && !servers.isEmpty()){
-			
-			Iterator<String> itr = servers.iterator();
-			
-			/*Recorremos la lista de servidores obtenida buscando quien esta manejando el juego en este momento*/
-		    while(itr.hasNext()){
-		    	
-		    	String serverip = itr.next();
-
-		    	if(!serverip.equals(hostname)){
-		    	
-					try {
-						
-				    	Iface1 skeleton = (Iface1) Naming.lookup("rmi://" + serverip + ":1099/Iface1");
-				    	
-				    	if(skeleton.getGameSession() != null){
-				    		Logger.debug("El juego esta corriendo actualmente en el servidor '" + hostname + "'", "Server", verbose);
-				    		return serverip;
-				    	}
-				    	
-					} catch (Exception e) {
-						Logger.error("No puedo saber si el servidor '" + serverip + "' esta corriendo el juego.");
-						Logger.error(e.getMessage());
-					}
-					
-		    	}
-		    }
-		}		
-		
-	    return null;
-		
 	}
-	
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {

@@ -4,13 +4,13 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Vector;
 
-public class IfaceImpl1 extends UnicastRemoteObject implements Iface1 {
+public class IfaceImpl extends UnicastRemoteObject implements Iface {
 
 	private static final long serialVersionUID = -5328206226473118382L;
 
 	private Server server = null;
 
-	public IfaceImpl1(int minplayers, String hostname, String otherserver,
+	public IfaceImpl(int minplayers, String hostname, String otherserver,
 			boolean verbose) throws RemoteException {
 		super();
 		server = new Server(hostname, otherserver, minplayers, verbose);
@@ -25,9 +25,8 @@ public class IfaceImpl1 extends UnicastRemoteObject implements Iface1 {
 		return server.addServerIp(servername);
 	}
 
-	//TODO Modificar esta funcion. y obtener la carga del servidor
-	public double getOverLoad() {
-		return Math.random();
+	public double getSystemLoad() {
+		return server.getSystemLoad();
 	}
 
 	@Override

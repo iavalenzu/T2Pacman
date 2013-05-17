@@ -3,8 +3,6 @@ package pacman;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
-import java.util.Vector;
-
 import javax.swing.JFrame;
 
 import pacman.Board;
@@ -49,11 +47,6 @@ public class PacMan extends JFrame {
 	
 	public static void parseargs(String[] args){
 		
-		Vector<String> v_serverip = new Vector<String>();
-		Vector<String> v_verbose = new Vector<String>();
-		
-		Vector<String> aux = null;
-		
 		int i = 0;
 		int length = args.length;
 
@@ -62,44 +55,38 @@ public class PacMan extends JFrame {
 			while (i < length) {
 				
 				switch (args[i]) {
+				case "-h":
+					usage();
+					break;
+					
 				case "-server":
-					aux = v_serverip;
+					serverip = args[++i];
 					break;
 					
 				case "-v":
-					aux = v_verbose;
-					aux.add("true");
+					verbose = true;
 					break;
 					
-					
 				default:
-					if(aux != null)
-						aux.add(args[i]);
+					usage();
 					break;
 				}
 				i++;
 			}
 			
-			if(!v_serverip.isEmpty()){
-				serverip = v_serverip.firstElement();
-			}else{
-				usage();
-			}
-	
-			if(!v_verbose.isEmpty()){
-				verbose = new Boolean(v_verbose.firstElement()).booleanValue();
-			}
-	
+
 		}catch(Exception e){
 			usage();
-		}
+		}		
+		
+		
 		
 	}	
 	
 	public static void usage(){
 		System.out.println("Modo de empleo: java pacman.PacMan [OPCION]...");
 		System.out.println("Las opciones son las que siguen:");
-		System.out.println("\t -server \t Establece la ip del servidor que esta correindo el juego.");
+		System.out.println("\t -server \t Establece la ip del servidor que esta corriendo el juego.");
 		System.out.println("\t -v \t Activa el modo de depuracion.");
 		System.exit(0);
 	}	

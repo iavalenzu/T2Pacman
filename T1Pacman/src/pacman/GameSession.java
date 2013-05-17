@@ -11,6 +11,8 @@ public class GameSession implements ActionListener, Serializable {
 
 	private static final long serialVersionUID = 2615372360707852353L;
 
+	private final int TIMER_DELAY = 40;
+	
 	private final short leveldata[] = { 19, 26, 26, 26, 18, 18, 18, 18, 18, 18, 18, 18,
 			18, 18, 22, 21, 0, 0, 0, 17, 16, 16, 16, 16, 16, 16, 16, 16, 16,
 			20, 21, 0, 0, 0, 17, 16, 16, 16, 16, 16, 16, 16, 16, 16, 20, 21, 0,
@@ -64,46 +66,69 @@ public class GameSession implements ActionListener, Serializable {
 		nrofghosts = 6;
 		currentspeed = 3;
 
-		/* Se inicia el timer */
-		timer = new Timer(40, this);
+		timer = new Timer(TIMER_DELAY, this);
 		
-		/* Se inicializa el screendata */
 		init();
 
 		Logger.debug("Jugadores conectados: " + players.size(), "GameSession", verbose);
 
 	}
 	
+	/*
+	 * Retorna el jugador asociado al identificador 'playerid'. 
+	 */
 	public Player getPlayer(String playerid){
 		return players.get(playerid);
 	}
 
+	/*
+	 * Retorna la lista con los jugadores que has ingresado al juego. 
+	 */
 	public HashMap<String, Player> getPlayers(){
 		return players;
 	}
 	
+	/*
+	 * Retorna el valor de la data de la pantalla para una posicion dada 'pos'. 
+	 */
 	public short getScreendata(short pos){
 		return screendata[pos];
 	}
 	
+	/*
+	 * Retorna el numero de fantasmas definidos en el juego. 
+	 */
 	public int getNrofghosts(){
 		return nrofghosts;
 	}
 	
+	/*
+	 * Retorna la posicion en el eje X de un fantasma dada una posicion dada 'pos'.
+	 */
 	public int getGhostX(short pos){
 		return ghostx[pos];
 	}
 	
+	/*
+	 * Retorna la posicion en el eje Y de un fantasma dada una posicion dada 'pos'.
+	 */
 	public int getGhostY(short pos){
 		return ghosty[pos];
 	}
 
+	/*
+	 * Inicializa la data de la pantalla a mostrar usando la info de leveldata. 
+	 */
 	public void init(){
 		short i;
 		for (i = 0; i < nrofblocks * nrofblocks; i++)
 			screendata[i] = leveldata[i];
 	}
 
+	/*
+	 * Genera una nuevo jugador y lo agrega a la lista de jugadores del juego, cada jugador se asocia
+	 * a un identificador unico, el cual se retorna al cliente. 
+	 */
 	public String createplayer() {
 
 		String id = UUID.randomUUID().toString();
@@ -129,6 +154,9 @@ public class GameSession implements ActionListener, Serializable {
 
 	}
 
+	/*
+	 * Si no hay jugadores jugando, el juego se detiene. 
+	 */
 	public void checkingameplayers(){
 		if(ingameplayers() == 0 && timer.isRunning()){
 			timer.stop();

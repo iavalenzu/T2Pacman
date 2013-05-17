@@ -7,7 +7,7 @@ import java.net.MalformedURLException;
 
 public class PacManServer{
 
-	private static Iface1 stub;
+	private static Iface stub;
 
 	static boolean verbose = false;
 	static int minplayers = 0;
@@ -25,7 +25,7 @@ public class PacManServer{
 			Logger.debug("El servidor esta corriendo en " + hostname + ".", "Server",  verbose);
 
 			// Crear el stub (objeto distribuido)
-			stub = new IfaceImpl1(minplayers, hostname, otherserver, verbose);
+			stub = new IfaceImpl(minplayers, hostname, otherserver, verbose);
 
 			// Hacer bind de la instancia en el servidor rmi
 			Naming.rebind("rmi://" + hostname + ":1099/Iface1", stub);

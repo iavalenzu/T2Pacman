@@ -50,7 +50,7 @@ public class Board extends JPanel implements ActionListener {
 
 	Timer timer;
 
-	private Iface1 skeleton;
+	private Iface skeleton;
 	private GameSession currentgamesession;
 	private Player currentplayer;
 	private String playerid;
@@ -61,22 +61,24 @@ public class Board extends JPanel implements ActionListener {
 
 		verbose = _verbose;
 		
-		
 		try {
 			
 			Logger.debug("Server hostname: " + serverip, "Server", verbose);
 			
-			skeleton = (Iface1) Naming.lookup("rmi://" + serverip + ":1099/Iface1");
+			skeleton = (Iface) Naming.lookup("rmi://" + serverip + ":1099/Iface1");
 
 			/* Dado que el juego puede migrar de un servidor a otro, es necesario saber que servidor esta corriendo actualmente el juego,
 			 * es por esta razon que se debe preguntar al servidor al cual me conecté, si esta corriendo el juego o si uno de sus compañeros
-			 * lo esta haciendo, para luego conectarme a él 
+			 * lo esta haciendo, para luego conectarme a él. 
 			 */
 			
 			String activeserver = skeleton.getActiveGameServer();
 			if(activeserver != null){
-				skeleton = (Iface1) Naming.lookup("rmi://" + activeserver + ":1099/Iface1");
-				Logger.debug("EL juego esta actualmente en el servidor '" + activeserver + "'", "Server", verbose);
+				skeleton = (Iface) Naming.lookup("rmi://" + activeserver + ":1099/Iface1");
+				Logger.debug("El juego esta actualmente en el servidor '" + activeserver + "'", "Server", verbose);
+			}else{
+				Logger.debug("El juego no esta disponible en los servidores", "Server", verbose);
+				System.exit(0);
 			}
 			
 			playerid = skeleton.createPlayer();
@@ -111,13 +113,6 @@ public class Board extends JPanel implements ActionListener {
 
 	public void addNotify() {
 		super.addNotify();
-		/*
-		try {
-			GameInit();
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
-		*/
 	}
 
 	public void DoAnim() {
@@ -382,8 +377,8 @@ public class Board extends JPanel implements ActionListener {
 			String hostname = skeleton.getMigrationHostname();
 			
 			if(hostname != null){
-				skeleton = (Iface1) Naming.lookup("rmi://" + hostname + ":1099/Iface1");
-				Logger.debug("EL juego migró al servidor '" + hostname + "'", "Server", verbose);
+				skeleton = (Iface) Naming.lookup("rmi://" + hostname + ":1099/Iface1");
+				Logger.debug("El juego migró al servidor '" + hostname + "'", "Server", verbose);
 			}
 
 			
