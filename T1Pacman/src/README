@@ -1,0 +1,65 @@
+*********************************
+***********	README **************
+*********************************
+
+
+
+
+=================
+Modo Compilación
+=================
+
+$ make
+
+
+=====================================
+Modo de Ejecución del Cliente Pacman
+=====================================
+
+$ java pacman.PacMan [OPTION]...
+
+*) No es necesario que "server" corresponda a una máquina que esté actualmente correindo el juego, al conectarse al grupo se determina que máquina corre el juego para luego conectarse a ella.
+
+Los parámetros de ejecución son los siguientes:
+
+	-h		Describe los parámetros de ejecución.
+	-server Establece la ip algun servidor del grupo que esta corriendo el juego.
+	-v 		Activa el modo de depuración (Opcional).
+
+
+
+
+======================================
+Modo de Ejecución del Servidor Pacman
+======================================
+
+*) El servidor automáticamente fija el valor de la propiedad "java.rmi.server.hostname" usando el valor del parámetro "hostname" que define la ip o nombre de la máquina donde se esté ejecutando el servidor, en caso de obtener un error se debe pasar como párametro la opción "-Djava.rmi.server.hostname=server_ip".
+
+$ java pacman.PacManServer [OPTION]... 
+
+Los parámetros de ejecución son los siguientes:
+
+	-h				Describe los parámetros de ejecución.
+	-n 				Establece el mínimo de jugadores que debe tener el juego antes de comenzar.
+	-v 				Activa el modo de depuración.
+	-hostname 		Define la ip donde correrá el servidor del juego.
+	-otherserver	Establece la ip de algun servidor del grupo de servidores que esten corriendo el juego, con el fin de agregarlo al grupo y permitir la migración.
+
+
+
+===========================================
+Ejemplo de creación de grupo de servidores
+===========================================
+
+*) Se crea el primer servidor de juego del grupo, no se define "otherserver" ya que soy el unico del grupo. 
+
+user@maquina1: /src$ java pacman.PacManServer -hostname maquina1    
+
+*) Se crea el segundo servidor del grupo, en otra maquina. El nuevo servidor informa su existencia a los demas servidores del grupo.
+
+user@maquina2: /src$ java pacman.PacManServer -hostname maquina2 -otherserver maquina1    
+
+*) Asi consecutivamente se pueden agregar mas servidores al grupo, especificando en "otherserver" algun nombre de maquina que pertenezca al grupo.
+
+user@maquinax: /src$ java pacman.PacManServer -hostname maquinax -otherserver "algun nombre de maquina del grupo"    
+
